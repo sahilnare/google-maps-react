@@ -1,6 +1,6 @@
 /* global google */
 import React from "react";
-import { withScriptjs, withGoogleMap, GoogleMap } from "react-google-maps";
+import { withScriptjs, withGoogleMap, GoogleMap, DirectionsRenderer } from "react-google-maps";
 import { SearchBox } from "react-google-maps/lib/components/places/SearchBox"
 import Marker from "./Marker";
 
@@ -8,17 +8,40 @@ const Map2 = withScriptjs(withGoogleMap((props) =>{
 
 
   return (
+    <div>
+      <div id="route-links" style={{marginTop: "80px"}}>
+      {
+
+
+        /*props.directions.routes.map((route, ind) => {
+          return (
+            <div key={ind} onMouseEnter={() => props.getRoute(ind)}>
+              <h1>Route {ind}</h1>
+            </div>
+          )
+        })*/
+        props.directions &&
+        props.directions.routes.concat(props.carDirections.routes).concat(props.busDirections.routes).map((route, ind) => {
+            return (
+              <div key={ind} onMouseEnter={() => props.getRoute(ind)}>
+                <h1>Route {ind}</h1>
+              </div>
+            )
+        })
+
+      }
+      </div>
       <GoogleMap
-        defaultZoom={14}
+        defaultZoom={13}
         center={props.center}
         ref={props.onMapMounted}
-        onBoundsChanged={props.onBoundsChanged}
+        onIdle={props.onIdle}
         >
         <SearchBox
-      ref={props.onSearchBoxMounted}
+      ref={props.depOnSearchBoxMounted}
       bounds={props.bounds}
       controlPosition={google.maps.ControlPosition.TOP_LEFT}
-      onPlacesChanged={props.onPlacesChanged}
+      onPlacesChanged={props.depOnPlacesChanged}
     >
       <input
         type="text"
@@ -38,11 +61,11 @@ const Map2 = withScriptjs(withGoogleMap((props) =>{
         }}
       />
     </SearchBox>
-    {/*<SearchBox
-      ref={props.onSearchBoxMounted}
+    <SearchBox
+      ref={props.arrOnSearchBoxMounted}
       bounds={props.bounds}
       controlPosition={google.maps.ControlPosition.TOP_RIGHT}
-      onPlacesChanged={props.onPlacesChanged}
+      onPlacesChanged={props.arrOnPlacesChanged}
     >
       <input
         type="text"
@@ -61,11 +84,39 @@ const Map2 = withScriptjs(withGoogleMap((props) =>{
           textOverflow: `ellipses`,
         }}
       />
-    </SearchBox>*/}
-    {props.markers.map((marker, index) =>
-      <Marker key={index} position={marker.position} />
-    )}
+    </SearchBox>
+    {
+
+      props.directions &&
+      props.directions.routes.map((route, ind) =>
+        <DirectionsRenderer directions={props.directions} routeIndex={ind} />
+      )
+
+      /*(
+          [props.directions, props.carDirections, props.busDirections].map((dir, ind) => {
+          if(props.routeIndex <= 3) {
+            return (<DirectionsRenderer directions={props.directions} routeIndex={props.routeIndex} polylineOption={{strokeColor: "green"}} />)
+          }
+          else if(props.routeIndex > 4) {
+            return (<DirectionsRenderer directions={props.busDirections} routeIndex={props.routeIndex-5} />)
+          }
+          else {
+            return (<DirectionsRenderer directions={props.carDirections} routeIndex={props.routeIndex-4} />)
+          }
+        })
+
+
+      )*/
+
+    }
+    {!props.directions ? props.depMarkers.map((marker, index) =>
+      <Marker key={index} position={marker.position} draggable={true} />
+    ) : null}
+    {!props.directions ? props.arrMarkers.map((marker, index) =>
+      <Marker key={index} position={marker.position} draggable={true} />
+    ) : null}
       </GoogleMap>
+      </div>
     );
   }
 ))

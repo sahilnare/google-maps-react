@@ -10,7 +10,6 @@ const Map = withScriptjs(withGoogleMap((props) =>{
                     doctor={doctor}
                     position={{lat: doctor.closestPractice.lat, lng: doctor.closestPractice.lon}}
                   />);
-
   return (
       <GoogleMap
         defaultZoom={14}
