@@ -2,6 +2,7 @@
 import React from "react";
 import Map from "./Map2";
 import url from "../google_maps_key"
+import _ from "lodash"
 
 // const google = window.google;
 
@@ -19,8 +20,50 @@ export default class MapContainer extends React.Component {
 
   }
 
-  componentDidMount() {
+  componentWillMount() {
+    const refs = {}
 
+      this.setState({
+        bounds: null,
+        center: {
+          lat: 19.07285, lng: 72.8823
+        },
+        markers: [],
+        onMapMounted: ref => {
+          refs.map = ref;
+        },
+        onBoundsChanged: () => {
+          this.setState({
+            bounds: refs.map.getBounds(),
+            // center: refs.map.getCenter(),
+          })
+        },
+        onSearchBoxMounted: ref => {
+          refs.searchBox = ref;
+        },
+        onPlacesChanged: () => {
+          const places = refs.searchBox.getPlaces();
+          const bounds = new google.maps.LatLngBounds();
+
+          places.forEach(place => {
+            if (place.geometry.viewport) {
+              bounds.union(place.geometry.viewport)
+            } else {
+              bounds.extend(place.geometry.location)
+            }
+          });
+          const nextMarkers = places.map(place => ({
+            position: place.geometry.location,
+          }));
+          const nextCenter = _.get(nextMarkers, '0.position', this.state.center);
+
+          this.setState({
+            center: nextCenter,
+            markers: nextMarkers,
+          });
+          // refs.map.fitBounds(bounds);
+        },
+      })
   }
 
   getDirections = () => {
@@ -54,8 +97,13 @@ export default class MapContainer extends React.Component {
 		return (
       <div>
 			<Map
-				markers={this.props.markers}
-        directions={this.state.directions}
+				markers={this.state.markers}
+        center={this.state.center}
+        onMapMounted={this.state.onMapMounted}
+        onBoundsChanged={this.state.onBoundsChanged}
+        bounds={this.state.bounds}
+        onPlacesChanged={this.state.onPlacesChanged}
+        onSearchBoxMounted={this.state.onSearchBoxMounted}
 				googleMapURL={url}
 				loadingElement={<div style={{ height: `100%` }} />}
 				containerElement={<div style={{ height: `600px`, width: `1000px` }} />}
@@ -84,5 +132,5 @@ MapContainer.defaultProps = {
   //     }
   //   }
   // ]
-  markers: []
+  // markers: []
 }
